@@ -82,7 +82,7 @@ def virarRodasTr(velEsq, velDir):
     sim.simxSetJointTargetVelocity(client_id, motorTrEsq, velEsq, sim.simx_opmode_blocking)
     sim.simxSetJointTargetVelocity(client_id, motorTrDr, velDir, sim.simx_opmode_blocking)
 
-def virarRodasTr(velEsq, velDir):
+def virarRodasFr(velEsq, velDir):
     # Velocidade do motor Frontal
     sim.simxSetJointTargetVelocity(client_id, motorFrEsq, velEsq, sim.simx_opmode_blocking)
     sim.simxSetJointTargetVelocity(client_id, motorFrDr, velDir, sim.simx_opmode_blocking)
@@ -108,6 +108,16 @@ def posicaoCaixa():
     _, posicao = sim.simxGetObjectPosition(client_id, robot, -1, sim.simx_opmode_buffer)
     return posicao
 
-def ir_ate_caixa():
-    while True:
-        a
+#def ir_ate_caixa():
+#    while True:
+#       a
+
+client_id = conectar()
+obter_handles(client_id)
+iniciarPosicao()
+posRobot = posicaoRobot()
+print(posRobot)
+setVelocidade(5)
+time.sleep(3)
+posRobot = posicaoRobot()
+print(posRobot)
