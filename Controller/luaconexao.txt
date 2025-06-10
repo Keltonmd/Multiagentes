@@ -1,0 +1,3 @@
+fuction sysCall_init()
+ simRemoteApi.start(19997)
+end
