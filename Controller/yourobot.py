@@ -20,7 +20,6 @@ motorFrEsq = None
 robot = None
 caixa = None
 
-
 def conectar():
     sim.simxFinish(-1)  # Fecha todas conexões anteriores
     client_id = sim.simxStart(ip, port, True, True, 2000, 5)
@@ -96,28 +95,77 @@ def stopRobot():
     sim.simxSetJointTargetVelocity(client_id, motorTrDr, 0, sim.simx_opmode_blocking)
     sim.simxSetJointTargetVelocity(client_id, motorFrDr, 0, sim.simx_opmode_blocking)
 
-def iniciarPosicao():
-    _, posicao = sim.simxGetObjectPosition(client_id, robot, -1, sim.simx_opmode_streaming)
-    _, posicao = sim.simxGetObjectPosition(client_id, robot, -1, sim.simx_opmode_streaming)
-
-def posicaoRobot():
-    _, posicao = sim.simxGetObjectPosition(client_id, robot, -1, sim.simx_opmode_buffer)
+def posicaoObjeto(objeto):
+    _, posicao = sim.simxGetObjectPosition(client_id, objeto, -1, sim.simx_opmode_blocking)
     return posicao
 
-def posicaoCaixa():
-    _, posicao = sim.simxGetObjectPosition(client_id, robot, -1, sim.simx_opmode_buffer)
-    return posicao
+def orientacaoObjeto(objeto):
+    _, orientation = sim.simxGetObjectOrientation(client_id, objeto, -1, sim.simx_opmode_blocking)
+    return orientation
 
-#def ir_ate_caixa():
-#    while True:
-#       a
+def ir_ate_caixa():
+    limite_distancia = 0.5
+    velocidade_linear = -2.0  # Velocidade para frente (ajuste conforme necessário)
+    velocidade_angular = 0.5  # Velocidade de giro (ajuste conforme necessário)
+    tolerancia_angulo = math.radians(5)  # 5 graus de tolerância para o alinhamento
 
+    while True:
+        posRobot = posicaoObjeto(robot)
+        posCaixa = posicaoObjeto(caixa)
+        orientRobot = orientacaoObjeto(robot) # Orientação do robô em radianos (pitch, yaw, roll)
+
+        print(f"Posicao Robo: {posRobot}\nPosicao Caixa: {posCaixa}")
+        print(f"Orientacao Robo: {orientRobot[2]} radianos") # Usamos a orientação no eixo Z (yaw)
+
+        # Diferença entre os pontos
+        dx = posCaixa[0] - posRobot[0]
+        dy = posCaixa[1] - posRobot[1]
+        distancia = math.hypot(dx, dy)
+        print(f"dx: {dx}\ndy: {dy}\ndistancia: {distancia}")
+
+        # Calcular o ângulo alvo para a caixa
+        angulo_alvo = math.atan2(dy, dx)
+        
+        # Obter o ângulo atual do robô (yaw)
+        angulo_robo = orientRobot[2] # Considerando que a rotação em Z é o yaw
+
+        # Calcular a diferença angular
+        # Normalizar o ângulo para estar entre -pi e pi
+        diferenca_angulo = angulo_alvo - angulo_robo
+        if diferenca_angulo > math.pi:
+            diferenca_angulo -= 2 * math.pi
+        elif diferenca_angulo < -math.pi:
+            diferenca_angulo += 2 * math.pi
+
+        print(f"Angulo alvo: {math.degrees(angulo_alvo):.2f} graus")
+        print(f"Angulo robo: {math.degrees(angulo_robo):.2f} graus")
+        print(f"Diferença de angulo: {math.degrees(diferenca_angulo):.2f} graus")
+
+        # Se o robô estiver perto, pare
+        if distancia < limite_distancia:
+            stopRobot()
+            print("Robô perto do alvo. Parando.")
+            break
+        
+        # Se o robô não estiver alinhado, gire
+        if abs(diferenca_angulo) > tolerancia_angulo:
+            if diferenca_angulo > 0: # Precisa girar para a esquerda (anti-horário)
+                virar4rodas(-velocidade_angular, velocidade_angular) # Roda esquerda pra trás, roda direita pra frente
+                print("Girando para a esquerda...")
+            else: # Precisa girar para a direita (horário)
+                virar4rodas(velocidade_angular, -velocidade_angular) # Roda esquerda pra frente, roda direita pra trás
+                print("Girando para a direita...")
+        else: # Se o robô estiver alinhado, vá para frente
+            setVelocidade(velocidade_linear)
+            print("Indo para frente...")
+            
+        time.sleep(0.1)
+
+    
 client_id = conectar()
-obter_handles(client_id)
-iniciarPosicao()
-posRobot = posicaoRobot()
-print(posRobot)
-setVelocidade(5)
-time.sleep(3)
-posRobot = posicaoRobot()
-print(posRobot)
+if client_id != -1:
+    obter_handles(client_id)
+    ir_ate_caixa()
+    desconectar()
+else:
+    print("Não foi possível iniciar a simulação. Verifique sua conexão com o CoppeliaSim.")
