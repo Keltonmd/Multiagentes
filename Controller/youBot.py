@@ -107,7 +107,7 @@ def calcularRotacao(alpha, beta, gamma):
 def moverRobo(alvo):
     print(f"Iniciando movimento para {alvo}")
     vel_max = 5.0
-    vel_min = 1.0
+    vel_min = 3.0
     
     while True:
         # Obter posição do robô
@@ -164,14 +164,43 @@ def moverRobo(alvo):
             
         time.sleep(0.5)
 
-def orientarRobo():
-    return
+def orientarRobo(anguloAlvo=90):
+    angRad = (anguloAlvo * (np.pi / 180))
+    while True:
+        # Obter orientação
+        rc_ori, orientacao = sim.simxGetObjectOrientation(clientId, handleRobot, -1, sim.simx_opmode_oneshot_wait)
+        
+        if rc_ori != sim.simx_return_ok:
+            print("Erro ao obter orientação do robô.")
+            break
+        
+        orientacao = np.array(orientacao)
+        orientacao = orientacao * 180/np.pi
+        orientacao = np.around(orientacao, decimals=0)
+        print(orientacao)
+        
+        ang, rad = calcularRotacao(orientacao[0], orientacao[1], orientacao[2])
+        print(f"Angulo: {ang}\nRadianos: {rad}")
+        
+        erro_angular = angRad - rad
+        erro_angular = (erro_angular + np.pi) % (2 * np.pi) - np.pi
+        
+        if erro_angular > 0.001:
+            setVelocidade(0)
+            virarEsquerda(+2, -2)
+        elif erro_angular < -0.001:
+            setVelocidade(0)
+            virarDireita(+2, -2)
+        else: 
+            setVelocidade(0)
+            break
 
 def entregarCaixa():
     rc_entrega, entregaPos = sim.simxGetObjectPosition(clientId, areaEntrega, -1, sim.simx_opmode_oneshot_wait)
     if rc_entrega == sim.simx_return_ok:
         entregaPos_xy = np.array([entregaPos[0], entregaPos[1]])
         moverRobo(entregaPos_xy)
+        orientarRobo(anguloAlvo=90)
     else:
         print("Erro ao obter posição da área de entrega.")
     
@@ -180,12 +209,10 @@ def recebeCaixa():
     if rc_recebe == sim.simx_return_ok:
         recebePos_xy = np.array([recebePos[0], recebePos[1]])
         moverRobo(recebePos_xy)
+        orientarRobo(anguloAlvo=90)
     else:
         print("Erro ao obter posição da área de recebimento.")
-    
-    
+       
 conectar()
 obterHandles()
-entregarCaixa()
-
 recebeCaixa()
