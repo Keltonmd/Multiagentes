@@ -1,96 +1,152 @@
-# Biblioteca para o Coppelia
-import sim
-# Bibliotecas uteis
+# Biblioteca para o Coppelia (versão nova com ZMQ API)
+from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-# coordenada para recebimento: X -2.550, y: 1.350
+# Variveis globais de conexão
+client = None
+sim = None
 
-# Variaveis globais
-ip = '127.0.0.1'
-port = 19999
-clientId = None
-
+# Variáveis globais
 handleRobotOmni = None
 handleRobotUR5 = None
 handlePads = []
 handleJointUR5 = []
 
 def conectar():
-    global clientId
-    
-    # Fechar conecões
-    sim.simxFinish(-1)
-    
-    # Conectar com o Coppelia
-    clientId = sim.simxStart(ip, port, True, True, 5000, 5)
-    
-    if clientId != 1:
-        print("Conexão via API realizada com sucesso")
+    global client, sim
+    client = RemoteAPIClient()
+    sim = client.require('sim')
 
 def obterHandles():
-    global handleRobotOmni, handlePads, handleJointUR5, handleRobotUR5
-    # Obter o robo Omni
-    returnCode, handleRobotOmni = sim.simxGetObjectHandle(clientId, "OmniPlatform", sim.simx_opmode_oneshot_wait)
-    print(handleRobotOmni)
-    
-    # Obter o robo UR5
-    returnCode, handleRobotUR5 = sim.simxGetObjectHandle(clientId, "UR5", sim.simx_opmode_oneshot_wait)
-    print(handleRobotUR5)
-    
-    # Obter as juntas do robo Omni
-    for i in range(5):
-        _, junta = sim.simxGetObjectHandle(clientId,f"regularRotation{i + 1}", sim.simx_opmode_oneshot_wait)
-        print(junta)
-        handlePads.append(junta)
-    
-    # Obter as Juntas do robo UR5
+    global handleRobotOmni, handleRobotUR5, handlePads, handleJointUR5
+
+    #handleRobotOmni = sim.getObject('/OmniPlatform')
+    #print(f"Robo Omni: {handleRobotOmni}")
+
+    handleRobotUR5 = sim.getObject('/UR5')
+    print(f"Robo UR5: {handleRobotUR5}")
+
+    # Obter as juntas do Omni
+    #for i in range(4):
+    #    junta = sim.getObject(f'/OmniPlatform/regularRotation{i + 1}')
+    #    handlePads.append(junta)
+
+    # Obter as juntas do UR5
     for i in range(6):
-        _, junta = sim.simxGetObjectHandle(clientId,f"jointUR{i + 1}", sim.simx_opmode_oneshot_wait)
-        print(junta)
+        junta = sim.getObject(f'/UR5/jointUR{i + 1}')
         handleJointUR5.append(junta)
 
-def irParaFT(v):
+# Controlar o OmniPlataform
+def irparaFT(v):
     # V positivo Frente, -v Tras
-    sim.simxSetJointTargetVelocity(clientId, handlePads[0], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[1], -v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[2], -v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[3], v, sim.simx_opmode_streaming + 5)
-    
+    sim.setJointTargetVelocity(handlePads[0], v)
+    sim.setJointTargetVelocity(handlePads[1], v)
+    sim.setJointTargetVelocity(handlePads[2], v)
+    sim.setJointTargetVelocity(handlePads[3], v)
+
 def irParaL(v):
     # V positivo direjta, -v esquerda
-    sim.simxSetJointTargetVelocity(clientId, handlePads[0], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[1], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[2], -v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[3], -v, sim.simx_opmode_streaming + 5)
+    sim.setJointTargetVelocity(handlePads[0], v)
+    sim.setJointTargetVelocity(handlePads[1], v)
+    sim.setJointTargetVelocity(handlePads[2], -v)
+    sim.setJointTargetVelocity(handlePads[3], -v)
 
 def irParaDD(v):
     # +v Diagnoal Cima, -v Diagnoal baixo
-    sim.simxSetJointTargetVelocity(clientId, handlePads[0], 0, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[1], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[2], 0, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[3], -v, sim.simx_opmode_streaming + 5)
-    
+    sim.setJointTargetVelocity(handlePads[0], 0)
+    sim.setJointTargetVelocity(handlePads[1], v)
+    sim.setJointTargetVelocity(handlePads[2], 0)
+    sim.setJointTargetVelocity(handlePads[3], -v)
+
 def irParaDE(v):
     # +v Diagnoal Cima, -v Diagnoal baixo
-    sim.simxSetJointTargetVelocity(clientId, handlePads[0], -v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[1], 0, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[2], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[3], 0, sim.simx_opmode_streaming + 5)
+    sim.setJointTargetVelocity(handlePads[0], -v)
+    sim.setJointTargetVelocity(handlePads[1], 0)
+    sim.setJointTargetVelocity(handlePads[2], v)
+    sim.setJointTargetVelocity(handlePads[3], 0)
 
-def girarRobo(v):
+def girarOmni(v):
     # +v gira sentido horario, v = 0 para o robo, -v gira sentido anti horario
-    sim.simxSetJointTargetVelocity(clientId, handlePads[0], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[1], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[2], v, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handlePads[3], v, sim.simx_opmode_streaming + 5)
+    sim.setJointTargetVelocity(handlePads[0], v)
+    sim.setJointTargetVelocity(handlePads[1], v)
+    sim.setJointTargetVelocity(handlePads[2], v)
+    sim.setJointTargetVelocity(handlePads[3], v)
+    
+# Controlar o UR5
+def girarBaseUr5(anguloGraus):
+    rad = np.radians(anguloGraus)
+    sim.setJointTargetPosition(handleJointUR5[0], rad)
 
+# Calcular o Angulo pelo Euller
+def calcularRotacao(alpha, beta, gamma):
+    # Quando alpha e beta são diferentes de 0
+    
+    # Casos fixos
+    if (alpha, beta, gamma) == (0, 90, 180):
+        return 0, (0 * (np.pi / 180))
+    elif (alpha, beta, gamma) == (-90, 0, -90):
+        return 90, (90 * (np.pi / 180))
+    elif (alpha, beta, gamma) == (0, -90, 0):
+        return 180, (180 * (np.pi / 180))
+    elif (alpha, beta, gamma) == (90, 0, 90):
+        return 270, (270 * (np.pi / 180))
+    
+    # Casos restantes:
+    if alpha == -90 and gamma == -90 and beta > 0:
+        return 90 - beta, ((90 - beta) * (np.pi / 180))
+    elif alpha == -90 and gamma == -90 and beta < 0:
+        return 90 + (beta * -1), ((90 + (beta * -1)) * (np.pi / 180))
+    elif alpha == 90 and gamma == 90 and beta < 0:
+        return 180 + (90 - (beta * -1)), ((180 + (90 - (beta * -1))) * (np.pi / 180))
+    elif alpha == 90 and gamma == 90 and beta > 0:
+        return 270 + beta, ((270 + beta) * (np.pi / 180))
+    
+    # Quando alpha e beta são 0
+    
+    if (alpha, beta, gamma) == (0, 0, 0):
+        return 0, (0 * (np.pi / 180))
+    elif (alpha, beta, gamma) == (0, 0, 90):
+        return 90, (90 * (np.pi / 180))
+    elif (alpha, beta, gamma) == (0, 0, -180) or (alpha, beta, gamma) == (0, 0, 180):
+        return 180, (180 * (np.pi / 180))
+    elif (alpha, beta, gamma) == (0, 0, -90):
+        return 270, (270 * (np.pi / 180))
+    
+    if alpha == 0 and beta == -0 and gamma > 0 and gamma < 180:
+        return gamma, (gamma * (np.pi / 180))
+    elif alpha == 0 and beta == 0 and gamma < 0:
+        return 180 + (180 - (gamma * -1)), ((180 + (180 - (gamma * -1))) * (np.pi / 180))
+    
+    return -1, -1 
 
+def obterOrientacao(objeto):
+    orientacao = np.array(sim.getObjectOrientation(objeto, -1))
+    orientacao = orientacao * 180/np.pi
+    orientacao = np.around(orientacao, decimals=0)
+    ang, rad = calcularRotacao(orientacao[0], orientacao[1], orientacao[2])
+    return ang, rad
+
+# Teste
 conectar()
 obterHandles()
 
-v = 80 * 2.398795 * np.pi / 180 # Velocidade do Omni
-v = v * -1
+# Girar o UR5 para a posição zero
+girarBaseUr5(0)
+time.sleep(2)
 
-sim.simxSetJointTargetVelocity(clientId, handleJointUR5[0], 5, sim.simx_opmode_oneshot_wait)
+# Pegar a orientação do eixo 5
+ang, rad = obterOrientacao(handleJointUR5[4])
+print("Orientação da junta 5:", ang)
+
+# Girar base para 90 graus
+girarBaseUr5(90)
+time.sleep(2)
+
+# Verificar orientação após movimento
+ang, rad = obterOrientacao(handleJointUR5[4])
+print("Nova orientação da junta 5:", ang)
+
+# Encerrar simulação (opcional)
+# sim.stopSimulation()
