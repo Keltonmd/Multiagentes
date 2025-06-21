@@ -8,14 +8,17 @@ import time
 client = None
 sim = None
 simIK = None
+ikEnv = None
+ikGroup_undamped = None
+ikGroup_damped = None
 
 # Variáveis globais
 handleRobotOmni = None
 handlePads = []
-handleRobotFranka = None
-handleJointFanka = []
+handleRobotUR5 = None
+handleJointUR5 = []
+tip = None
 target = None
-cubo = None
 
 def conectar():
     global client, sim, simIK
@@ -23,8 +26,27 @@ def conectar():
     sim = client.require('sim')
     simIK = client.require('simIK')
 
+def configurarIK():
+    global ikEnv, ikGroup_undamped, ikGroup_damped
+
+    # 1. Cria o ambiente IK
+    ikEnv = simIK.createEnvironment()
+    print("Ambiente IK criado.")
+
+    ikGroup_undamped = simIK.createGroup(ikEnv)
+    simIK.setGroupCalculation(ikEnv, ikGroup_undamped, simIK.method_pseudo_inverse, 0, 6)
+    
+    simIK.addElementFromScene(ikEnv, ikGroup_undamped, handleRobotUR5, tip, target, simIK.constraint_pose)
+    print("Grupo IK não amortecido configurado (pseudo-inversa).")
+
+    ikGroup_damped = simIK.createGroup(ikEnv)
+    simIK.setGroupCalculation(ikEnv, ikGroup_damped, simIK.method_damped_least_squares, 1, 99)
+    simIK.addElementFromScene(ikEnv, ikGroup_damped, handleRobotUR5, tip, target, simIK.constraint_pose)
+    print("Grupo IK amortecido configurado (damped least squares).")
+
+
 def obterHandles():
-    global handleRobotOmni, handleRobotFranka, handlePads, handleJointFanka, cubo, target
+    global handleRobotOmni, handleRobotUR5, handlePads, handleJointUR5, tip, target
 
     #handleRobotOmni = sim.getObject('/OmniPlatform')
     #print(f"Robo Omni: {handleRobotOmni}")
@@ -34,17 +56,17 @@ def obterHandles():
     #    junta = sim.getObject(f'/OmniPlatform/regularRotation{i + 1}')
     #    handlePads.append(junta)
 
-    handleRobotFranka = sim.getObject('/Franka')
-    print(f"Robo UR5: {handleRobotFranka}")
+    handleRobotUR5 = sim.getObject('/UR5')
+    print(f"Robo UR5: {handleRobotUR5}")
 
     # Obter as juntas do UR5
-    for i in range(7):
-        junta = sim.getObject(f'/Franka/joint{i + 1}')
-        handleJointFanka.append(junta)
+    for i in range(6):
+        junta = sim.getObject(f'/UR5/jointUR{i + 1}')
+        handleJointUR5.append(junta)
     
-    # Obter o target
-    target = sim.getObject("/Franka/Target")
-    cubo = sim.getObject("/Cuboid")
+    # Obter o Tip e target
+    tip = sim.getObject("/UR5/RG2/Tip")
+    target = sim.getObject("/Target")
 
 # Controlar o OmniPlataform
 def irparaFT(v):
@@ -85,7 +107,7 @@ def girarOmni(v):
 # Controlar o UR5
 def girarBaseUr5(anguloGraus):
     rad = np.radians(anguloGraus)
-    sim.setJointTargetPosition(handleJointFanka[0], rad)
+    sim.setJointTargetPosition(handleJointUR5[0], rad)
 
 # Calcular o Angulo pelo Euller
 def calcularRotacao(alpha, beta, gamma):
@@ -136,22 +158,21 @@ def obterOrientacao(objeto):
     ang, rad = calcularRotacao(orientacao[0], orientacao[1], orientacao[2])
     return ang, rad
 
+def executarIK():
+    # Tenta resolver a IK com o grupo não amortecido (mais rápido e preciso)
+    res, *_ = simIK.handleGroup(ikEnv, ikGroup_undamped, {'syncWorlds': True})
+    
+    if res != simIK.result_success:
+        simIK.handleGroup(ikEnv, ikGroup_damped, {'syncWorlds': True})
+        print("Aviso: Solucionador IK não amortecido falhou. Usando o amortecido para estabilidade.")
+
 def moverTargetPara(x, y, z):
     sim.setObjectPosition(target, -1, [x, y, z])
+    executarIK()
 
 # Teste
 conectar()
 obterHandles()
+configurarIK()
 
-posicaoTarget = sim.getObjectPosition(target, -1)
-print(f"Posicao: {posicaoTarget}")
-
-posicaoCubo = sim.getObjectPosition(cubo, -1)
-print(f"Posicao: {posicaoCubo}")
-
-print("Movendo Garra para cubo")
-moverTargetPara(posicaoCubo[0], posicaoCubo[1], posicaoCubo[2])
-
-time.sleep(3)
-
-# moverTargetPara(posicaoTarget[0], posicaoTarget[1], posicaoTarget[2])
+moverTargetPara(-0.9, 0.1, 1)

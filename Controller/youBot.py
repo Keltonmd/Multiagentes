@@ -1,21 +1,19 @@
-# Biblioteca para o Coppelia
-import sim
-# Bibliotecas uteis
+# Biblioteca para o Coppelia (versão nova com ZMQ API)
+from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-# Variaveis globais
-ip = '127.0.0.1'
-port = 19999
-clientId = None
-
+# Variveis globais de conexão
+client = None
+sim = None
+    
 # Nome dos Objetos
-robotName = 'youBot'
-motorFrontDir = 'rollingJoint_rr'
-motorFrontEsq = 'rollingJoint_rl'
-motorTrasDir = 'rollingJoint_fr'
-motorTrasEsq = 'rollingJoint_fl'
+robotName = '/youBot'
+motorFrontDir = '/youBot/rollingJoint_rr'
+motorFrontEsq = '/youBot/rollingJoint_rl'
+motorTrasDir = '/youBot/rollingJoint_fr'
+motorTrasEsq = '/youBot/rollingJoint_fl'
 
 # Handle do Robot
 handleRobot = None
@@ -27,57 +25,38 @@ areaEntrega = None
 areaRecebimento = None
 
 def conectar():
-    global clientId
-    
-    # Fechar conecões
-    sim.simxFinish(-1)
-    
-    # Conectar com o Coppelia
-    clientId = sim.simxStart(ip, port, True, True, 5000, 5)
-    
-    if clientId != 1:
-        print("Conexão via API realizada com sucesso")
+    global client, sim
+    client = RemoteAPIClient()
+    sim = client.require('sim')
 
 def obterHandles():
     global handleRobot, handleMotorFrontDir, handleMotorFrontEsq, handleMotorTrasDir, handleMotorTrasEsq, areaEntrega, areaRecebimento
     
-    # Handle do Robot
-    returnCode, handleRobot = sim.simxGetObjectHandle(clientId, robotName, sim.simx_opmode_oneshot_wait)
-    
-    # Handles dos motores frontais
-    returnCode, handleMotorFrontDir = sim.simxGetObjectHandle(clientId, motorFrontDir, sim.simx_opmode_oneshot_wait)
-    returnCode, handleMotorFrontEsq = sim.simxGetObjectHandle(clientId, motorFrontEsq, sim.simx_opmode_oneshot_wait)
-    
-    # Handles dos motores traseiros
-    returnCode, handleMotorTrasDir = sim.simxGetObjectHandle(clientId, motorTrasDir, sim.simx_opmode_oneshot_wait)
-    returnCode, handleMotorTrasEsq = sim.simxGetObjectHandle(clientId, motorTrasEsq, sim.simx_opmode_oneshot_wait)
-    
-    # Areas de recebimento e entrega
-    returnCode, areaRecebimento = sim.simxGetObjectHandle(clientId, "recebe_caixa", sim.simx_opmode_oneshot_wait)
-    returnCode, areaEntrega = sim.simxGetObjectHandle(clientId, "entrega_caixa", sim.simx_opmode_oneshot_wait)
-    
-    if returnCode == sim.simx_return_ok:
-        print('Handles obtidos com sucesso.')
-    else:
-        print('Erro ao obter um ou mais handles.')
+    handleRobot = sim.getObject(robotName)
+    handleMotorFrontDir = sim.getObject(motorFrontDir)
+    handleMotorFrontEsq = sim.getObject(motorFrontEsq)
+    handleMotorTrasDir = sim.getObject(motorTrasDir)
+    handleMotorTrasEsq = sim.getObject(motorTrasEsq)
+    areaEntrega = sim.getObject('/entrega_caixa')
+    areaRecebimento = sim.getObject('/recebe_caixa')
     
 def setVelocidade(vel):
-    sim.simxSetJointTargetVelocity(clientId, handleMotorFrontDir, vel, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorFrontEsq, vel, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorTrasDir, vel, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorTrasEsq, vel, sim.simx_opmode_streaming + 5)
+    sim.setJointTargetVelocity(handleMotorFrontDir, vel)
+    sim.setJointTargetVelocity(handleMotorFrontEsq, vel)
+    sim.setJointTargetVelocity(handleMotorTrasDir, vel)
+    sim.setJointTargetVelocity(handleMotorTrasEsq, vel)
 
 def virarDireita(velPosit, velNeg):
-    sim.simxSetJointTargetVelocity(clientId, handleMotorFrontDir, velPosit, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorFrontEsq, velNeg, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorTrasDir, velPosit, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorTrasEsq, velNeg, sim.simx_opmode_streaming + 5)
-    
+    sim.setJointTargetVelocity(handleMotorFrontDir, velPosit)
+    sim.setJointTargetVelocity(handleMotorFrontEsq, velNeg)
+    sim.setJointTargetVelocity(handleMotorTrasDir, velPosit)
+    sim.setJointTargetVelocity(handleMotorTrasEsq, velNeg)
+
 def virarEsquerda(velPosit, velNeg):
-    sim.simxSetJointTargetVelocity(clientId, handleMotorFrontDir, velNeg, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorFrontEsq, velPosit, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorTrasDir, velNeg, sim.simx_opmode_streaming + 5)
-    sim.simxSetJointTargetVelocity(clientId, handleMotorTrasEsq, velPosit, sim.simx_opmode_streaming + 5)
+    sim.setJointTargetVelocity(handleMotorFrontDir, velNeg)
+    sim.setJointTargetVelocity(handleMotorFrontEsq, velPosit)
+    sim.setJointTargetVelocity(handleMotorTrasDir, velNeg)
+    sim.setJointTargetVelocity(handleMotorTrasEsq, velPosit)
 
 def calcularRotacao(alpha, beta, gamma):
     print(f"Alpha: {alpha}\nBeta: {beta}\nGamma: {gamma}")
@@ -111,20 +90,11 @@ def moverRobo(alvo):
     
     while True:
         # Obter posição do robô
-        rc_pos, posRobot_xyz = sim.simxGetObjectPosition(clientId, handleRobot, -1, sim.simx_opmode_oneshot_wait)
-        
-        if rc_pos != sim.simx_return_ok:
-            print("Erro ao obter posição do robô.")
-            break
+        posRobot_xyz = sim.getObjectPosition(handleRobot, -1)
         posRobot = np.array([posRobot_xyz[0], posRobot_xyz[1]])
 
         # Obter orientação
-        rc_ori, orientacao = sim.simxGetObjectOrientation(clientId, handleRobot, -1, sim.simx_opmode_oneshot_wait)
-        
-        if rc_ori != sim.simx_return_ok:
-            print("Erro ao obter orientação do robô.")
-            break
-        orientacao = np.array(orientacao)
+        orientacao = np.array(sim.getObjectOrientation(handleRobot, -1))
         orientacao = orientacao * 180/np.pi
         orientacao = np.around(orientacao, decimals=0)
         print(orientacao)
@@ -137,7 +107,7 @@ def moverRobo(alvo):
         # Norma (magnitude)
         distancia = np.linalg.norm(diferenca)
 
-        if distancia < 0.1:
+        if distancia < 0.09:
             setVelocidade(0)
             print("Destino alcançado!")
             break
@@ -168,13 +138,7 @@ def orientarRobo(anguloAlvo=90):
     angRad = (anguloAlvo * (np.pi / 180))
     while True:
         # Obter orientação
-        rc_ori, orientacao = sim.simxGetObjectOrientation(clientId, handleRobot, -1, sim.simx_opmode_oneshot_wait)
-        
-        if rc_ori != sim.simx_return_ok:
-            print("Erro ao obter orientação do robô.")
-            break
-        
-        orientacao = np.array(orientacao)
+        orientacao = np.array(sim.getObjectOrientation(handleRobot, -1))
         orientacao = orientacao * 180/np.pi
         orientacao = np.around(orientacao, decimals=0)
         print(orientacao)
@@ -196,23 +160,18 @@ def orientarRobo(anguloAlvo=90):
             break
 
 def entregarCaixa():
-    rc_entrega, entregaPos = sim.simxGetObjectPosition(clientId, areaEntrega, -1, sim.simx_opmode_oneshot_wait)
-    if rc_entrega == sim.simx_return_ok:
-        entregaPos_xy = np.array([entregaPos[0], entregaPos[1]])
-        moverRobo(entregaPos_xy)
-        orientarRobo(anguloAlvo=90)
-    else:
-        print("Erro ao obter posição da área de entrega.")
+    entregaPos = sim.getObjectPosition(areaEntrega, -1)
+    entregaPos_xy = np.array([entregaPos[0], entregaPos[1]])
+    moverRobo(entregaPos_xy)
+    orientarRobo(anguloAlvo=90)
     
 def recebeCaixa():
-    rc_recebe, recebePos = sim.simxGetObjectPosition(clientId, areaRecebimento, -1, sim.simx_opmode_oneshot_wait)
-    if rc_recebe == sim.simx_return_ok:
-        recebePos_xy = np.array([recebePos[0], recebePos[1]])
-        moverRobo(recebePos_xy)
-        orientarRobo(anguloAlvo=90)
-    else:
-        print("Erro ao obter posição da área de recebimento.")
+    recebePos = sim.getObjectPosition(areaRecebimento, -1)
+    recebePos_xy = np.array([recebePos[0], recebePos[1]])
+    moverRobo(recebePos_xy)
+    orientarRobo(anguloAlvo=90)
+
        
 conectar()
 obterHandles()
-recebeCaixa()
+entregarCaixa()
