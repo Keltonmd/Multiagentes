@@ -174,5 +174,5 @@ def recebeCaixa():
        
 conectar()
 obterHandles()
-entregarCaixa()
+#entregarCaixa()
 recebeCaixa()
