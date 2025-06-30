@@ -108,7 +108,7 @@ def fecharGarra():
 
     print("[INFO] Fechando garra...")
  
-def subirBraco(z_final, velocidade = 0.001, intervalo = 0.001):
+def subirBraco(z_final, velocidade = 0.001, intervalo = 0.0001):
     nova_pos = sim.getObjectPosition(target, -1)
     z_atual = nova_pos[2]
     while z_atual < z_final:
@@ -121,7 +121,7 @@ def subirBraco(z_final, velocidade = 0.001, intervalo = 0.001):
         sim.setObjectPosition(target, -1, nova_pos)
         time.sleep(intervalo)
 
-def descerBraco(z_final, velocidade = 0.001, intervalo = 0.001):
+def descerBraco(z_final, velocidade = 0.001, intervalo = 0.0001):
     nova_pos = sim.getObjectPosition(target, -1)
     z_atual = nova_pos[2]
     while z_atual > z_final:
@@ -160,7 +160,7 @@ def pegaBlocoEsteira():
     altura_inicial = sim.getObjectPosition(sim.getObject("/pontoEspera"), -1)[2]
     subirBraco(altura_inicial)
 
-def moverBraco(x_alvo, y_alvo, velocidade = 0.001, intervalo = 0.001):
+def moverBraco(x_alvo, y_alvo, velocidade = 0.001, intervalo = 0.0001):
     nova_pos = sim.getObjectPosition(target, -1)
     x_atual = nova_pos[0]
     y_atual = nova_pos[1]
