@@ -12,10 +12,15 @@ simIK = None
 # Variáveis globais
 handleRobotOmni = None
 handlePads = []
-handleRobotFranka = None
+handleRobotUR5 = None
 handleJointFanka = []
 target = None
 cubo = None
+
+estanteAzul = None
+estanteVermelha = None
+posDisponivelAzul = {}
+posDisponivelVer = {}
 
 def conectar():
     global client, sim, simIK
@@ -24,26 +29,26 @@ def conectar():
     simIK = client.require('simIK')
 
 def obterHandles():
-    global handleRobotOmni, handleRobotFranka, handlePads, handleJointFanka, cubo, target
+    global handleRobotOmni, handleRobotUR5, handlePads, handleJointFanka, cubo, target
 
-    #handleRobotOmni = sim.getObject('/OmniPlatform')
-    #print(f"Robo Omni: {handleRobotOmni}")
+    handleRobotOmni = sim.getObject('/OmniPlatform')
+    print(f"Robo Omni: {handleRobotOmni}")
 
     # Obter as juntas do Omni
-    #for i in range(4):
-    #    junta = sim.getObject(f'/OmniPlatform/regularRotation{i + 1}')
-    #    handlePads.append(junta)
+    for i in range(4):
+        junta = sim.getObject(f'/OmniPlatform/regularRotation{i + 1}')
+        handlePads.append(junta)
 
-    handleRobotFranka = sim.getObject('/Franka')
-    print(f"Robo UR5: {handleRobotFranka}")
+    handleRobotUR5 = sim.getObject('/OmniPlatform/UR5')
+    print(f"Robo UR5: {handleRobotUR5}")
 
     # Obter as juntas do UR5
     for i in range(7):
-        junta = sim.getObject(f'/Franka/joint{i + 1}')
+        junta = sim.getObject(f'/OmniPlatform/UR5/joint{i + 1}')
         handleJointFanka.append(junta)
     
     # Obter o target
-    target = sim.getObject("/Franka/Target")
+    target = sim.getObject("/OmniPlatform/UR5/Target")
     cubo = sim.getObject("/Cuboid")
 
 # Controlar o OmniPlataform
