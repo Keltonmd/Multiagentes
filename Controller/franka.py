@@ -107,44 +107,109 @@ def fecharGarra():
     simIK.handleGroup(ikEnv, ikGroup2, {"syncWorlds": True})
 
     print("[INFO] Fechando garra...")
-    
-def pegaBlocoEsteira(velocidade = 0.001, intervalo = 0.0001):
-    # Pega o handle e posição do bloco da esteira
-    bloco = sim.getObject("/esteiraColeta")
-    pos_bloco = sim.getObjectPosition(bloco, -1)
-    
-    # Posição atual do target (ponta do braço)
-    pos_target = sim.getObjectPosition(target, -1)
-    
-    # Alinha X e Y do target com o bloco (mantém altura atual)
-    nova_pos = [pos_bloco[0], pos_bloco[1], pos_target[2]]
-    sim.setObjectPosition(target, -1, nova_pos)
-    
-    altura_final = pos_bloco[2] + 0.02
+ 
+def subirBraco(z_final, velocidade = 0.001, intervalo = 0.001):
+    nova_pos = sim.getObjectPosition(target, -1)
     z_atual = nova_pos[2]
-    while z_atual > altura_final:
-        z_atual -= velocidade
+    while z_atual < z_final:
+        z_atual += velocidade
         
-        if z_atual < altura_final:
-            z_atual = altura_final
+        if z_atual > z_final: 
+            z_atual = z_final
         
         nova_pos[2] = z_atual
         sim.setObjectPosition(target, -1, nova_pos)
+        time.sleep(intervalo)
+
+def descerBraco(z_final, velocidade = 0.001, intervalo = 0.001):
+    nova_pos = sim.getObjectPosition(target, -1)
+    z_atual = nova_pos[2]
+    while z_atual > z_final:
+        z_atual -= velocidade
         
+        if z_atual < z_final: 
+            z_atual = z_final
+        
+        nova_pos[2] = z_atual
+        sim.setObjectPosition(target, -1, nova_pos)
         time.sleep(intervalo)
     
-    print(f"[INFO] Target alinhado e posicionado sobre a esteira em z = {altura_final:.3f}")
+def alinharComObjeto(obj_path):
+    pos_alvo = sim.getObjectPosition(sim.getObject(obj_path), -1)
+    pos_atual = sim.getObjectPosition(target, -1)
+    
+    nova_pos = [pos_alvo[0], pos_alvo[1], pos_atual[2]]
+    sim.setObjectPosition(target, -1, nova_pos)
+    time.sleep(0.1)
 
-def levantarBlocoEsteria():
-    # Pega o handle e posição do bloco da esteira
-    bloco = sim.getObject("/pontoEspera")
-    pos_bloco = sim.getObjectPosition(bloco, -1)
+def pegaBlocoEsteira():
+    bloco = "/esteiraColeta"
+    altura = 0.02
+    
+    # Alinha o target horizontalmente com o bloco
+    alinharComObjeto(bloco)
+    
+    # z Final
+    z_bloco = sim.getObjectPosition(sim.getObject(bloco), -1)[2] + altura
+    descerBraco(z_bloco,)
+    
+    #Implementar o Fecha Garra
+    fecharGarra()
+    time.sleep(2)
+    # Sobe de volta à altura anterior (posição de início do movimento)
+    altura_inicial = sim.getObjectPosition(sim.getObject("/pontoEspera"), -1)[2]
+    subirBraco(altura_inicial)
+
+def moverBraco(x_alvo, y_alvo, velocidade = 0.001, intervalo = 0.001):
+    nova_pos = sim.getObjectPosition(target, -1)
+    x_atual = nova_pos[0]
+    y_atual = nova_pos[1]
+    while x_atual != x_alvo or y_atual != y_alvo:
+        if x_atual != x_alvo:
+            if x_atual < x_alvo:
+                x_atual += velocidade
+                if x_atual > x_alvo:
+                    x_atual = x_alvo
+            else:
+                x_atual -= velocidade
+                if x_atual < x_alvo:
+                    x_atual = x_alvo
+                    
+        if y_atual != y_alvo:
+            if y_atual < y_alvo:
+                y_atual += velocidade
+                if y_atual > y_alvo:
+                    y_atual = y_alvo
+            else:
+                y_atual -= velocidade
+                if y_atual < y_alvo:
+                    y_atual = y_alvo
+        
+        nova_pos[0] = x_atual
+        nova_pos[1] = y_atual
+        sim.setObjectPosition(target, -1, nova_pos)
+        time.sleep(intervalo)
+            
+def entregaBloco():
+    pos_Entrega = sim.getObjectPosition(sim.getObject("/youBot/cuboPos"), -1)
+    
+    moverBraco(pos_Entrega[0], pos_Entrega[1])
+    descerBraco(pos_Entrega[2])
+    time.sleep(1)
+    abrirGarra()
+    time.sleep(0.5)
+    
+    posEspera = sim.getObjectPosition(sim.getObject("/pontoEspera"), -1)
+    subirBraco(posEspera[2])
+    moverBraco(posEspera[0], posEspera[1])
     
 
 # Executa
 conectar()
 obterHandles()
 ikGarra()
+abrirGarra()
 pegaBlocoEsteira()
+entregaBloco()
 #abrirGarra()
 #fecharGarra()
