@@ -8,7 +8,6 @@ simIK = None
 
 handleFrankaBase = None
 handleFrankaJoints = []
-cubo = None
 target = None
 
 # Garra Robotiq85
@@ -34,7 +33,7 @@ def conectar():
     simIK = client.require('simIK')
 
 def obterHandles():
-    global handleFrankaBase, handleFrankaJoints, cubo, target
+    global handleFrankaBase, handleFrankaJoints, target
     global handleActive1, handleActive2, simBase
 
     handleFrankaBase = sim.getObject('/Franka')
@@ -43,7 +42,6 @@ def obterHandles():
         junta = sim.getObject('/Franka/joint', {'index': i})
         handleFrankaJoints.append(junta)
         
-    cubo = sim.getObject("/Cuboid")
     target = sim.getObject("/Franka/target")
     
     # Handle da Garra
@@ -51,15 +49,7 @@ def obterHandles():
     handleActive1 = sim.getObject("/Franka/ROBOTIQ85/active1")
     handleActive2 = sim.getObject("/Franka/ROBOTIQ85/active2")
 
-    print(f"handleFrankaBase: {handleFrankaBase}, cubo: {cubo}, handleFrankaJoints: {handleFrankaJoints}")
-
-def moverTargetAcimaDoBloco(altura=0.2):
-    pos_cubo = sim.getObjectPosition(cubo, -1)  # global
-    pos_target = [pos_cubo[0], pos_cubo[1], pos_cubo[2] + altura]
-    
-    sim.setObjectPosition(target, -1, pos_target)
-    
-    print(f"[INFO] Target movido para {pos_target} com orientação para baixo.")
+    print(f"handleFrankaBase: {handleFrankaBase}, handleFrankaJoints: {handleFrankaJoints}")
 
 def ikGarra():
     global simTip1, simTip2, ikEnv, ikGroup1, ikGroup2, SimTarget1, SimTarget2
