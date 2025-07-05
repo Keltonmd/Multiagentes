@@ -1,10 +1,13 @@
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import numpy as np
 import time
+import threading
+import paho.mqtt.client as mqtt
 
 client = None
 sim = None
 simIK = None
+mqtt_client = None
 
 handleFrankaBase = None
 handleFrankaJoints = []
@@ -25,6 +28,10 @@ SimTarget1 = None
 ikGroup2 = None
 simTip2 = None
 SimTarget2 = None
+
+# Variaveis para colaboração Memoria do Agente
+espera_bloco = False
+destino_livre = False
 
 def conectar():
     global client, sim, simIK
@@ -65,6 +72,8 @@ def ikGarra():
     simTip2 = sim.getObject("/Franka/ROBOTIQ85/RclosureDummyA")
     SimTarget2 = sim.getObject("/Franka/ROBOTIQ85/RclosureDummyB")
     simIK.addElementFromScene(ikEnv, ikGroup2, simBase, simTip2, SimTarget2, simIK.constraint_x+simIK.constraint_z)
+
+# Capacidades do Agente
 
 def abrirGarra():
     p1 = sim.getJointPosition(handleActive1)
@@ -133,6 +142,8 @@ def alinharComObjeto(obj_path):
     time.sleep(0.1)
 
 def pegaBlocoEsteira():
+    abrirGarra()
+    
     bloco = "/esteiraColeta"
     altura = 0.02
     
@@ -194,12 +205,48 @@ def entregaBloco():
     moverBraco(posEspera[0], posEspera[1])
     
 
+# Comunicação com MQTT
+# Subscriber
+def on_message(client, userdata, msg):
+    global espera_bloco, destino_livre
+    print(f"Mensagem recebida: {msg.topic} -> {msg.payload.decode()}")
+
+    if msg.topic == "/bloco/disponivel":
+        espera_bloco = True
+        print("[MQTT] Bloco disponível, iniciando coleta.")
+    elif msg.topic == "/recebimento/disponivel":
+        destino_livre = True
+        print("[MQTT] Destino disponível, iniciando entrega.")
+    
+# Broker
+mqtt_client = mqtt.Client()
+mqtt_client.on_message = on_message
+mqtt_client.connect("localhost", 1883, 60)    
+
+mqtt_client.subscribe("/bloco/disponivel")
+mqtt_client.subscribe("/recebimento/disponivel")
+
+def mqtt_loop():
+    mqtt_client.loop_forever()
+
+# Inicia thread do MQTT
+threading.Thread(target=mqtt_loop, daemon=True).start()
+
 # Executa
 conectar()
 obterHandles()
 ikGarra()
-abrirGarra()
-pegaBlocoEsteira()
-entregaBloco()
-#abrirGarra()
-#fecharGarra()
+
+
+while True:
+    if espera_bloco:
+        pegaBlocoEsteira()
+        mqtt_client.publish("/recebimento/disponivel", payload="true")
+        espera_bloco = False
+
+    if destino_livre:
+        entregaBloco()
+        mqtt_client.publish("/recebimento/entregue", payload="true")
+        destino_livre = False
+
+    time.sleep(0.1)

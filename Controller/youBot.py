@@ -1,8 +1,9 @@
 # Biblioteca para o Coppelia (versão nova com ZMQ API)
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import numpy as np
-import matplotlib.pyplot as plt
 import time
+import threading
+import paho.mqtt.client as mqtt
 
 # Variveis globais de conexão
 client = None
@@ -24,6 +25,9 @@ handleMotorTrasEsq = None
 areaEntrega = None
 areaRecebimento = None
 
+# Memoria do Robo
+iniciar_entrega = False
+
 def conectar():
     global client, sim
     client = RemoteAPIClient()
@@ -39,7 +43,8 @@ def obterHandles():
     handleMotorTrasEsq = sim.getObject(motorTrasEsq)
     areaEntrega = sim.getObject('/entrega_caixa')
     areaRecebimento = sim.getObject('/recebe_caixa')
-    
+   
+# Capacidades do Robo 
 def setVelocidade(vel):
     sim.setJointTargetVelocity(handleMotorFrontDir, vel)
     sim.setJointTargetVelocity(handleMotorFrontEsq, vel)
@@ -171,8 +176,32 @@ def recebeCaixa():
     moverRobo(recebePos_xy)
     orientarRobo(anguloAlvo=90)
 
-       
+# Colaboração do robo
+
+def on_message(client, userdata, msg):
+    global iniciar_entrega
+
+    if msg.topic == "/recebimento/entregue":
+        iniciar_entrega = True
+        print("[MQTT] Recebido: Bloco entregue. Indo buscar.")
+        
+mqtt_client = mqtt.Client()
+mqtt_client.on_message = on_message
+mqtt_client.connect("localhost", 1883, 60)
+
+mqtt_client.subscribe("/recebimento/entregue")
+
+def mqtt_loop():
+    mqtt_client.loop_forever()
+
+threading.Thread(target=mqtt_loop, daemon=True).start()
+     
 conectar()
 obterHandles()
-entregarCaixa()
-#recebeCaixa()
+
+while True:
+    if iniciar_entrega:
+        entregarCaixa()
+        iniciar_entrega = False
+
+    time.sleep(0.1)
