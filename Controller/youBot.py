@@ -27,6 +27,7 @@ areaRecebimento = None
 
 # Memoria do Robo
 iniciar_entrega = False
+iniciar_coleta = True
 
 def conectar():
     global client, sim
@@ -181,7 +182,7 @@ def recebeCaixa():
 def on_message(client, userdata, msg):
     global iniciar_entrega
 
-    if msg.topic == "/recebimento/entregue":
+    if msg.topic == "/entregador/encomendaDisponibilizada":
         iniciar_entrega = True
         print("[MQTT] Recebido: Bloco entregue. Indo buscar.")
         
@@ -189,7 +190,7 @@ mqtt_client = mqtt.Client()
 mqtt_client.on_message = on_message
 mqtt_client.connect("localhost", 1883, 60)
 
-mqtt_client.subscribe("/recebimento/entregue")
+mqtt_client.subscribe("/entregador/encomendaDisponibilizada")
 
 def mqtt_loop():
     mqtt_client.loop_forever()
@@ -203,5 +204,11 @@ while True:
     if iniciar_entrega:
         entregarCaixa()
         iniciar_entrega = False
+        
+    if iniciar_coleta:
+        recebeCaixa()
+        print(f"Ponto de Recebimento")
+        mqtt_client.publish("/entregador/pontoRecebimento", payload="true")
+        iniciar_coleta = False
 
     time.sleep(0.1)

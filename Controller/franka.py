@@ -32,6 +32,7 @@ SimTarget2 = None
 # Variaveis para colaboração Memoria do Agente
 espera_bloco = False
 destino_livre = False
+segurando_bloco = False
 
 def conectar():
     global client, sim, simIK
@@ -203,7 +204,6 @@ def entregaBloco():
     posEspera = sim.getObjectPosition(sim.getObject("/pontoEspera"), -1)
     subirBraco(posEspera[2])
     moverBraco(posEspera[0], posEspera[1])
-    
 
 # Comunicação com MQTT
 # Subscriber
@@ -214,7 +214,7 @@ def on_message(client, userdata, msg):
     if msg.topic == "/bloco/disponivel":
         espera_bloco = True
         print("[MQTT] Bloco disponível, iniciando coleta.")
-    elif msg.topic == "/recebimento/disponivel":
+    elif msg.topic == "/entregador/pontoRecebimento":
         destino_livre = True
         print("[MQTT] Destino disponível, iniciando entrega.")
     
@@ -224,7 +224,7 @@ mqtt_client.on_message = on_message
 mqtt_client.connect("localhost", 1883, 60)    
 
 mqtt_client.subscribe("/bloco/disponivel")
-mqtt_client.subscribe("/recebimento/disponivel")
+mqtt_client.subscribe("/entregador/pontoRecebimento")
 
 def mqtt_loop():
     mqtt_client.loop_forever()
@@ -239,14 +239,17 @@ ikGarra()
 
 
 while True:
-    if espera_bloco:
+    if espera_bloco and not segurando_bloco:
         pegaBlocoEsteira()
-        mqtt_client.publish("/recebimento/disponivel", payload="true")
+        print(f"Bloco pego!")
         espera_bloco = False
+        segurando_bloco = True
 
-    if destino_livre:
+    if destino_livre and segurando_bloco:
         entregaBloco()
-        mqtt_client.publish("/recebimento/entregue", payload="true")
+        print(f"Bloco entregue!")
+        mqtt_client.publish("/entregador/encomendaDisponibilizada", payload="true")
         destino_livre = False
+        segurando_bloco = False
 
     time.sleep(0.1)
