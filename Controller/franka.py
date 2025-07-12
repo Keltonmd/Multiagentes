@@ -33,6 +33,7 @@ SimTarget2 = None
 espera_bloco = False
 destino_livre = False
 segurando_bloco = False
+finalizado = False
 
 def conectar():
     global client, sim, simIK
@@ -153,7 +154,7 @@ def pegaBlocoEsteira():
     
     # z Final
     z_bloco = sim.getObjectPosition(sim.getObject(bloco), -1)[2] + altura
-    descerBraco(z_bloco,)
+    descerBraco(z_bloco)
     
     #Implementar o Fecha Garra
     fecharGarra()
@@ -196,10 +197,10 @@ def entregaBloco():
     pos_Entrega = sim.getObjectPosition(sim.getObject("/youBot/cuboPos"), -1)
     
     moverBraco(pos_Entrega[0], pos_Entrega[1])
-    descerBraco(pos_Entrega[2])
+    descerBraco(pos_Entrega[2] + 0.02, velocidade=0.0001)
     time.sleep(1)
     abrirGarra()
-    time.sleep(0.5)
+    time.sleep(1)
     
     posEspera = sim.getObjectPosition(sim.getObject("/pontoEspera"), -1)
     subirBraco(posEspera[2])
@@ -208,7 +209,7 @@ def entregaBloco():
 # Comunicação com MQTT
 # Subscriber
 def on_message(client, userdata, msg):
-    global espera_bloco, destino_livre
+    global espera_bloco, destino_livre, finalizado
     print(f"Mensagem recebida: {msg.topic} -> {msg.payload.decode()}")
 
     if msg.topic == "/bloco/disponivel":
@@ -217,14 +218,19 @@ def on_message(client, userdata, msg):
     elif msg.topic == "/entregador/pontoRecebimento":
         destino_livre = True
         print("[MQTT] Destino disponível, iniciando entrega.")
+    elif msg.topic == "/colaboracao/fim":
+        finalizado = True
+        print("[MQTT] Colaboração Finalizada.")
     
 # Broker
 mqtt_client = mqtt.Client()
 mqtt_client.on_message = on_message
 mqtt_client.connect("localhost", 1883, 60)    
 
-mqtt_client.subscribe("/bloco/disponivel")
+mqtt_client.subscribe("/bloco/disponivel", qos=1)
 mqtt_client.subscribe("/entregador/pontoRecebimento")
+mqtt_client.subscribe("/colaboracao/fim")
+
 
 def mqtt_loop():
     mqtt_client.loop_forever()
@@ -239,6 +245,7 @@ ikGarra()
 
 
 while True:
+    
     if espera_bloco and not segurando_bloco:
         pegaBlocoEsteira()
         print(f"Bloco pego!")
@@ -251,5 +258,8 @@ while True:
         mqtt_client.publish("/entregador/encomendaDisponibilizada", payload="true")
         destino_livre = False
         segurando_bloco = False
+        
+    if finalizado:
+        break
 
     time.sleep(0.1)
