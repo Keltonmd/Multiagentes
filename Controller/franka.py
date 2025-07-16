@@ -197,7 +197,7 @@ def entregaBloco():
     pos_Entrega = sim.getObjectPosition(sim.getObject("/youBot/cuboPos"), -1)
     
     moverBraco(pos_Entrega[0], pos_Entrega[1])
-    descerBraco(pos_Entrega[2] + 0.02, velocidade=0.0001)
+    descerBraco(pos_Entrega[2] + 0.02, velocidade=0.001)
     time.sleep(1)
     abrirGarra()
     time.sleep(1)
