@@ -72,10 +72,10 @@ def guardarBloco():
     time.sleep(1.5)
     
     espera = agent.getObjeto("/UR10/posEspera")
-    agent.rotacionar_para_posicao_xyz(180, espera)
+    agent.rotacionar_para_posicao_xyz(0, espera)
 
 while True:
-    if client.get_espera_bloco and not segurando_bloco:
+    if client.get_espera_bloco() and not segurando_bloco:
         pegarBloco()
         print(f"Bloco pego!")
         client.publicar("/entregador/encomendaColetada")

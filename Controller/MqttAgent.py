@@ -11,7 +11,7 @@ class MqttAgent:
         self.destino_livre = False
         self.finalizado = False
         self.iniciar_entrega = False
-        self.iniciar_coleta = False
+        self.iniciar_coleta = True
         
         self.client.connect(broker, port, 60)
         
@@ -26,10 +26,11 @@ class MqttAgent:
             if not isinstance(topico, tuple):
                 self.client.subscribe(topico)                
             else:
+                print(topico[1])
                 self.client.subscribe(topico[0], qos=topico[1])
     
-    def publicar(self, canal):
-        self.client.publish(canal, payload=True)
+    def publicar(self, canal, qos = 0):
+        self.client.publish(canal, payload=True, qos=qos)
     
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode()

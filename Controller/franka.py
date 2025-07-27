@@ -48,12 +48,12 @@ while True:
         client.set_espera_bloco(False)
         segurando_bloco = True
         
-    if client.get_destino_livre and segurando_bloco:
+    if client.get_destino_livre() and segurando_bloco:
         entregarBloco()
         print(f"Bloco entregue!")
         client.publicar("/entregador/encomendaDisponibilizada")
         client.set_destino_livre(False)
         segurando_bloco = False
     
-    if client.get_finalizado:
+    if client.get_finalizado():
         break
