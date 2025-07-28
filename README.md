@@ -1,7 +1,9 @@
 # 🤖 Projeto Multiagentes com CoppeliaSim e MQTT
 
 **Aluno:** Kelton Martins Dias
+
 **Orientador:** Prof. Felipe Mota
+
 **Instituição:** Instituto Federal do Norte de Minas Gerais – Campus Januária
 
 ## 🧠 Visão Geral
