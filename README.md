@@ -1,5 +1,3 @@
----
-
 # 🤖 Projeto Multiagentes com CoppeliaSim e MQTT
 
 **Aluno:** Kelton Martins Dias
