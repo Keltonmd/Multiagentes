@@ -116,7 +116,7 @@ class CoppeliaMobileAgent:
                 
             time.sleep(0.5)
     
-    def oritentarRobo(self, anguloAlvo=90):  
+    def orientarRobo(self, anguloAlvo=90):  
         angRad = (anguloAlvo * (np.pi / 180))
         
         while True:

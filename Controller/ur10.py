@@ -75,11 +75,11 @@ def guardarBloco():
     agent.rotacionar_para_posicao_xyz(0, espera)
 
 while True:
-    if client.get_espera_bloco() and not segurando_bloco:
+    if client.espera_bloco and not segurando_bloco:
         pegarBloco()
         print(f"Bloco pego!")
         client.publicar("/entregador/encomendaColetada")
-        client.set_espera_bloco(False)
+        client.espera_bloco = False
         segurando_bloco = True
         
     if segurando_bloco:
@@ -87,5 +87,6 @@ while True:
         print(f"Bloco guardado!")
         segurando_bloco = False
         
-    if client.get_finalizado():
+    if client.finalizado:
+        client.desconectar()
         break

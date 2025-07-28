@@ -13,24 +13,25 @@ client = MqttAgent(topicos)
 
 def entregar():
     agent.moverRobo(np.array([areaEntrega[0], areaEntrega[1]]))
-    agent.oritentarRobo()
+    agent.orientarRobo()
 
 def receber():
     agent.moverRobo(np.array([areaRecebimento[0], areaRecebimento[1]]))
-    agent.oritentarRobo()
+    agent.orientarRobo()
     
 while True:
-    if client.get_iniciar_entrega():
+    if client.iniciar_entrega:
         entregar()
         print(f"Ponto de Recebimento")
         client.publicar("/entregador/coletaDisponivel")
-        client.set_iniciar_entrega(False)
+        client.iniciar_entrega = False
 
-    if client.get_iniciar_coleta():
+    if client.iniciar_coleta:
         receber()
         print(f"Ponto de Recebimento")
         client.publicar("/entregador/pontoRecebimento")
-        client.set_iniciar_coleta(False)
+        client.iniciar_coleta = False
 
-    if client.get_finalizado():
+    if client.finalizado:
+        client.desconectar()
         break

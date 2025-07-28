@@ -1,97 +1,121 @@
 import paho.mqtt.client as mqtt
-import threading
+from types import MappingProxyType
 
 class MqttAgent:
-    def __init__(self, topicos, broker="localhost", port=1883):
+    def __init__(self, topicos_mqtt: list, broker: str = "localhost", port: int = 1883):
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         
         # Estados internos
-        self.espera_bloco = False
-        self.destino_livre = False
-        self.finalizado = False
-        self.iniciar_entrega = False
-        self.iniciar_coleta = True
+        self._espera_bloco = False
+        self._destino_livre = False
+        self._finalizado = False
+        self._iniciar_entrega = False
+        self._iniciar_coleta = True
+        
+        # Mapeamento de tópicos dos agentes
+        self.topic_map = MappingProxyType({
+            "/entregador/coletaDisponivel": self.tratar_coleta_disponivel,
+            "/bloco/disponivel": self.tratar_coleta_disponivel,
+            "/entregador/pontoRecebimento": self.tratar_ponto_recebimento,
+            "/entregador/encomendaDisponibilizada": self.tratar_encomenda_disponibilizada,
+            "/entregador/encomendaColetada": self.tratar_encomenda_coletada,
+            "/colaboracao/fim": self.tratar_fim_colaboracao,
+        })
         
         self.client.connect(broker, port, 60)
         
-        self.subscribe(topicos)
-        self.iniciarThreading()
+        self.subscribe(topicos_mqtt)
+        self.iniciar()
     
-    def subscribe(self, topics):
-        """
-            topics = [topico ou (topico, qos)]
-        """
+    def subscribe(self, topics: list[tuple | str]):
         for topico in topics:
             if not isinstance(topico, tuple):
                 self.client.subscribe(topico)                
             else:
-                print(topico[1])
                 self.client.subscribe(topico[0], qos=topico[1])
-    
-    def publicar(self, canal, qos = 0):
-        self.client.publish(canal, payload=True, qos=qos)
     
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode()
         print(f"[MQTT] {msg.topic} -> {payload}")
         
-        if msg.topic == "/entregador/coletaDisponivel":
-            self.espera_bloco = True
-            print("[MQTT] Bloco disponível, iniciando coleta.")
+        handler = self.topic_map.get(msg.topic)
+        if handler:
+            handler(payload)
+        else:
+            print(f"[MQTT] Aviso: tópico não tratado: {msg.topic}")
+        
+    # Tratamentos
+    def tratar_coleta_disponivel(self, payload):
+        self.espera_bloco = True
+        print("[MQTT] Bloco disponível, iniciando coleta.")
 
-        elif msg.topic == "/bloco/disponivel":
-            self.espera_bloco = True
-            print("[MQTT] Bloco disponível, iniciando coleta.")
+    def tratar_ponto_recebimento(self, payload):
+        self.destino_livre = True
+        print("[MQTT] Destino disponível, iniciando entrega.")
 
-        elif msg.topic == "/entregador/pontoRecebimento":
-            self.destino_livre = True
-            print("[MQTT] Destino disponível, iniciando entrega.")
+    def tratar_encomenda_disponibilizada(self, payload):
+        self.iniciar_entrega = True
+        print("[MQTT] Recebido: Bloco recebido. Indo entregar.")
 
-        elif msg.topic == "/entregador/encomendaDisponibilizada":
-            self.iniciar_entrega = True
-            print("[MQTT] Recebido: Bloco recebido. Indo entregar.")
+    def tratar_encomenda_coletada(self, payload):
+        self.iniciar_coleta = True
+        print("[MQTT] Recebido: Bloco entregue. Indo coletar.")
 
-        elif msg.topic == "/entregador/encomendaColetada":
-            self.iniciar_coleta = True
-            print("[MQTT] Recebido: Bloco entregue. Indo coletar.")
-
-        elif msg.topic == "/colaboracao/fim":
-            self.finalizado = True
-            print("[MQTT] Colaboração Finalizada.")
+    def tratar_fim_colaboracao(self, payload):
+        self.finalizado = True
+        print("[MQTT] Colaboração Finalizada.")
     
-    def mqtt_loop(self):
-        self.client.loop_forever()
+    # Fim dos Tratamentos
     
-    def iniciarThreading(self):
-        threading.Thread(target=self.mqtt_loop, daemon=True).start()
+    def iniciar(self):
+        self.client.loop_start()
+        
+    def publicar(self, canal: str, qos: int = 0):
+        self.client.publish(canal, payload=True, qos=qos)
     
-    def get_espera_bloco(self):
-        return self.espera_bloco
-
-    def get_destino_livre(self):
-        return self.destino_livre
-
-    def get_finalizado(self):
-        return self.finalizado
-
-    def get_iniciar_entrega(self):
-        return self.iniciar_entrega
-
-    def get_iniciar_coleta(self):
-        return self.iniciar_coleta 
+    def desconectar(self):
+        print("[MQTT] Desconectando do broker...")
+        self.client.loop_stop()
+        self.client.disconnect()
+        print("[MQTT] Desconectado.")
     
-    def set_espera_bloco(self, valor: bool):
-        self.espera_bloco = valor
+    @property
+    def espera_bloco(self):
+        return self._espera_bloco
 
-    def set_destino_livre(self, valor: bool):
-        self.destino_livre = valor
+    @espera_bloco.setter
+    def espera_bloco(self, valor: bool):
+        self._espera_bloco = valor
 
-    def set_finalizado(self, valor: bool):
-        self.finalizado = valor
+    @property
+    def destino_livre(self):
+        return self._destino_livre
 
-    def set_iniciar_entrega(self, valor: bool):
-        self.iniciar_entrega = valor
+    @destino_livre.setter
+    def destino_livre(self, valor: bool):
+        self._destino_livre = valor
 
-    def set_iniciar_coleta(self, valor: bool):
-        self.iniciar_coleta = valor
+    @property
+    def finalizado(self):
+        return self._finalizado
+
+    @finalizado.setter
+    def finalizado(self, valor: bool):
+        self._finalizado = valor
+
+    @property
+    def iniciar_entrega(self):
+        return self._iniciar_entrega
+
+    @iniciar_entrega.setter
+    def iniciar_entrega(self, valor: bool):
+        self._iniciar_entrega = valor
+
+    @property
+    def iniciar_coleta(self):
+        return self._iniciar_coleta
+
+    @iniciar_coleta.setter
+    def iniciar_coleta(self, valor: bool):
+        self._iniciar_coleta = valor

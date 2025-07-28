@@ -42,18 +42,19 @@ def entregarBloco():
     agent.mover_para_posicao_xyz([posEspera[0], posEspera[1], None])
     
 while True:
-    if client.get_espera_bloco() and not segurando_bloco:
+    if client.espera_bloco and not segurando_bloco:
         pegarBloco()
         print(f"Bloco pego!")
-        client.set_espera_bloco(False)
+        client.espera_bloco = False
         segurando_bloco = True
         
-    if client.get_destino_livre() and segurando_bloco:
+    if client.destino_livre and segurando_bloco:
         entregarBloco()
         print(f"Bloco entregue!")
         client.publicar("/entregador/encomendaDisponibilizada")
-        client.set_destino_livre(False)
+        client.destino_livre = False
         segurando_bloco = False
     
-    if client.get_finalizado():
+    if client.finalizado:
+        client.desconectar()
         break
