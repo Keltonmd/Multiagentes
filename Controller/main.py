@@ -1,5 +1,10 @@
+from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import subprocess
 import time
+
+client = RemoteAPIClient()
+sim = client.require('sim')
+sim.startSimulation()
 
 # Lista dos seus scripts
 scripts = [
@@ -18,6 +23,7 @@ for script in scripts:
     processos.append(p)
     time.sleep(1) 
 
-# Espera (opcional) até todos terminarem
 for p in processos:
     p.wait()
+
+sim.stopSimulation()

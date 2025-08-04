@@ -23,13 +23,13 @@ while True:
     if client.iniciar_entrega:
         entregar()
         print(f"Ponto de Recebimento")
-        client.publicar("/entregador/coletaDisponivel")
+        client.publicar("/entregador/coletaDisponivel", {"status": True})
         client.iniciar_entrega = False
 
     if client.iniciar_coleta:
         receber()
         print(f"Ponto de Recebimento")
-        client.publicar("/entregador/pontoRecebimento")
+        client.publicar("/entregador/pontoRecebimento", {"status": True})
         client.iniciar_coleta = False
 
     if client.finalizado:

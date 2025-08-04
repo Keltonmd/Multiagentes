@@ -5,7 +5,7 @@ import time
 agent = CoppeliaBracoAgent("/UR10")
 posDisponivel = agent.getPosicoesRack("/rack/pos", 10)
 
-topicos = ["/entregador/coletaDisponivel", "/colaboracao/fim"]
+topicos = ["/entregador/coletaDisponivel",]
 client = MqttAgent(topicos)
 segurando_bloco = False
 
@@ -74,11 +74,15 @@ def guardarBloco():
     espera = agent.getObjeto("/UR10/posEspera")
     agent.rotacionar_para_posicao_xyz(0, espera)
 
+def todas_posicoes_ocupadas():
+    return not any(pos["livre"] for pos in posDisponivel)
+
+agent.abrirGarra()
 while True:
     if client.espera_bloco and not segurando_bloco:
         pegarBloco()
         print(f"Bloco pego!")
-        client.publicar("/entregador/encomendaColetada")
+        client.publicar("/entregador/encomendaColetada", {"status": True})
         client.espera_bloco = False
         segurando_bloco = True
         
@@ -86,7 +90,9 @@ while True:
         guardarBloco()
         print(f"Bloco guardado!")
         segurando_bloco = False
-        
-    if client.finalizado:
+    
+    if todas_posicoes_ocupadas():
+        client.publicar("/colaboracao/fim", {"status": True}, qos=1)
+        print("Todos os blocos Guardados")
         client.desconectar()
         break

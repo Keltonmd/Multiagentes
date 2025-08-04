@@ -27,3 +27,6 @@ class CoppeliaSensorAgent:
     def leitura(self):
         result, _, _, _, _ = self.sim.readProximitySensor(self.baseSensor)
         return bool(result)
+    
+    def handleObjeto(self, caminho):
+        return self.sim.getObject(caminho)

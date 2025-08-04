@@ -5,22 +5,22 @@ import time
 ultimoEstado = False
 agent = CoppeliaSensorAgent("/gera_caixa/proximitySensor")
 
-client = MqttAgent([])
-
+client = MqttAgent(["/colaboracao/fim"])
 cont = 0
 while True:
     detectado = agent.leitura()
     
     if detectado and not ultimoEstado:
+        time.sleep(3)
         print("[SENSOR] Bloco detectado. Publicando...")
-        client.publicar("/bloco/disponivel", qos=1)
+        client.publicar("/bloco/disponivel", msg={"cubo": f"/Cuboid{cont}"}, qos=1)
         ultimoEstado = True
-        if cont >= 9:
-            client.publicar("/colaboracao/fim", qos=1)
-            print("[SENSOR] Fim da colaboração.")
-            break
         cont += 1
     elif not detectado:
         ultimoEstado = False
+        
+    if client.finalizado:
+        client.desconectar()
+        break
     
     time.sleep(0.1)

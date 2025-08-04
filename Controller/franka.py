@@ -11,7 +11,7 @@ def pegarBloco():
     agent.abrirGarra()
     time.sleep(1)
     
-    bloco = "/esteiraColeta"
+    bloco = client.cubo
     altura = 0.02
     
     # Alinha o target horizontalmente com o bloco
@@ -32,15 +32,17 @@ def entregarBloco():
     pos_Entrega = agent.getPos("/youBot/cuboPos")
     
     agent.mover_para_posicao_xyz([pos_Entrega[0], pos_Entrega[1], None])
+    agent.alinharComObjeto("/youBot/cuboPos")
     agent.descerBraco(pos_Entrega[2] + 0.02, velocidade=0.001)
-    time.sleep(1)
+    time.sleep(2)
     agent.abrirGarra()
     time.sleep(1)
     
     posEspera = agent.getPos("/pontoEspera")
     agent.subirBraco(posEspera[2])
     agent.mover_para_posicao_xyz([posEspera[0], posEspera[1], None])
-    
+
+agent.abrirGarra()
 while True:
     if client.espera_bloco and not segurando_bloco:
         pegarBloco()
@@ -51,7 +53,7 @@ while True:
     if client.destino_livre and segurando_bloco:
         entregarBloco()
         print(f"Bloco entregue!")
-        client.publicar("/entregador/encomendaDisponibilizada")
+        client.publicar("/entregador/encomendaDisponibilizada", {'status': True})
         client.destino_livre = False
         segurando_bloco = False
     

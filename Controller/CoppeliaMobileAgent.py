@@ -101,7 +101,7 @@ class CoppeliaMobileAgent:
             erro_angular = angulo_alvo - rad
             erro_angular = (erro_angular + np.pi) % (2 * np.pi) - np.pi
             
-            print(f"Angulo alvo: {angulo_alvo * 180/np.pi}\nErro angular: {erro_angular* 180/np.pi}")
+            #print(f"Angulo alvo: {angulo_alvo * 180/np.pi}\nErro angular: {erro_angular* 180/np.pi}")
             
             # Só anda se estiver bem alinhado (erro pequeno)
             if erro_angular > 0.2:
