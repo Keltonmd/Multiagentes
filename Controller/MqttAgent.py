@@ -1,11 +1,15 @@
 import paho.mqtt.client as mqtt
 from types import MappingProxyType
 import json
+import time
+import os
+import pandas as pd
 
 class MqttAgent:
     # multiagent.ddns.net
     # ip: ip do edison
-    def __init__(self, topicos_mqtt: list, broker: str = "localhost", port: int = 1883):
+    # ip 10.73.186.74
+    def __init__(self, id: str, topicos_mqtt: list, broker: str = "localhost", port: int = 1883):
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         
@@ -17,7 +21,7 @@ class MqttAgent:
         self._destino_livre = False
         self._finalizado = False
         self._iniciar_entrega = False
-        self._iniciar_coleta = True
+        self._iniciar_coleta = False
         self._cubo = None
         
         # Mapeamento de tópicos dos agentes
@@ -34,6 +38,8 @@ class MqttAgent:
         
         self.subscribe(topicos_mqtt)
         self.iniciar()
+        self.dados_latencia = []
+        self.id_agente = id
     
     def subscribe(self, topics: list[tuple | str]):
         for topico in topics:
@@ -47,6 +53,19 @@ class MqttAgent:
         payload = json.loads(payload)
         print(f"[MQTT] {msg.topic} -> {payload}")
         
+        if "timestamp_envio" in payload:
+            timestamp_recepcao = time.time()
+            timestamp_envio = payload.pop("timestamp_envio")
+            latencia = (timestamp_recepcao - timestamp_envio) * 1000
+            
+            # Armazenar os dados
+            self.dados_latencia.append({
+                'Robo_Publicador': payload.get('id_publicador', 'Desconhecido'),
+                'Robo_Assinante': self.id_agente,
+                'Topico': msg.topic,
+                'Latencia_ms': latencia
+            })
+        
         handler = self.topic_map.get(msg.topic)
         if handler:
             handler(payload)
@@ -57,11 +76,26 @@ class MqttAgent:
         self.client.loop_start()
         
     def publicar(self, canal: str, msg: dict, qos: int = 0):
+        msg["timestamp_envio"] = time.time()
+        msg["id_publicador"] = self.id_agente
+        
         msg = json.dumps(msg)
         self.client.publish(canal, payload=msg, qos=qos)
+        
+    def salvar_resultados(self):
+        if self.dados_latencia:
+            df = pd.DataFrame(self.dados_latencia)
+            nome_arquivo = f"resultados_{self.id_agente}.csv"
+            if os.path.exists(nome_arquivo):
+                df.to_csv(nome_arquivo, mode='a', header=False, index=False)
+                print(f"Novos resultados de latência do agente '{self.id_agente}' adicionados ao arquivo '{nome_arquivo}'")
+            else:
+                df.to_csv(nome_arquivo, index=False)
+                print(f"Resultados de latência do agente '{self.id_agente}' salvos em '{nome_arquivo}'")
     
     def desconectar(self):
         print("[MQTT] Desconectando do broker...")
+        self.salvar_resultados()
         self.client.loop_stop()
         self.client.disconnect()
         print("[MQTT] Desconectado.")

@@ -8,8 +8,8 @@ sim.startSimulation()
 
 # Lista dos seus scripts
 scripts = [
-    "sensorEsteira.py",
     "franka.py",
+    "sensorEsteira.py",
     "youBot.py",
     "ur10.py"
 ]

@@ -74,8 +74,8 @@ class CoppeliaMobileAgent:
         return -1, -1 
     
     def moverRobo(self, alvo):
-        vel_max = 5.0
-        vel_min = 4.0
+        vel_max = 8.0
+        vel_min = 7.0
         
         while True:
             posRobot_xyz = self.sim.getObjectPosition(self.baseRobo, -1)
@@ -106,10 +106,10 @@ class CoppeliaMobileAgent:
             # Só anda se estiver bem alinhado (erro pequeno)
             if erro_angular > 0.2:
                 self.setVelocidade(0)
-                self.virarRobo(-2, 2)
+                self.virarRobo(-4, 4)
             elif erro_angular < -0.2:
                 self.setVelocidade(0)
-                self.virarRobo(+2, -2)
+                self.virarRobo(+4, -4)
             else:
                 velocidade = max(vel_min, min(vel_max, distancia * 2))
                 self.setVelocidade(-velocidade)
@@ -131,10 +131,10 @@ class CoppeliaMobileAgent:
             
             if erro_angular > 0.001:
                 self.setVelocidade(0)
-                self.virarRobo(-2, +2)
+                self.virarRobo(-4, +4)
             elif erro_angular < -0.001:
                 self.setVelocidade(0)
-                self.virarRobo(+2, -2)
+                self.virarRobo(+4, -4)
             else: 
                 self.setVelocidade(0)
                 break

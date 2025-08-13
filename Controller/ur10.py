@@ -6,7 +6,7 @@ agent = CoppeliaBracoAgent("/UR10")
 posDisponivel = agent.getPosicoesRack("/rack/pos", 10)
 
 topicos = ["/entregador/coletaDisponivel",]
-client = MqttAgent(topicos)
+client = MqttAgent("UR10", topicos)
 segurando_bloco = False
 
 def pegarBloco():
@@ -22,13 +22,13 @@ def pegarBloco():
     else:
         pos_cubo[1] += 0.025
         
-    agent.mover_para_posicao_xyz([pos_cubo[0], pos_cubo[1], pos_cubo[2]])
+    agent.mover_para_posicao_xyz([pos_cubo[0], pos_cubo[1], pos_cubo[2] - 0.008] )
     time.sleep(1)
     agent.fecharGarra()
     time.sleep(2)
     
     posEspera = agent.getPos("/UR10/posEspera")
-    agent.subirBraco(posEspera[2])
+    agent.subirBraco(posEspera[2] - posEspera[2]/2)
     
     agent.mover_para_posicao_xyz([posEspera[0], posEspera[1], posEspera[2]])
 

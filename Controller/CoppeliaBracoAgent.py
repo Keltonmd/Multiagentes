@@ -172,7 +172,7 @@ class CoppeliaBracoAgent:
             self.sim.setObjectPosition(self.target, -1, nova_pos)
             time.sleep(intervalo)
 
-    def mover_para_posicao_xyz(self, posicoes, velocidade=0.001, intervalo=0.001):
+    def mover_para_posicao_xyz(self, posicoes, velocidade=0.001, intervalo=0.0001):
         nova_pos = list(self.sim.getObjectPosition(self.target, -1))
         x_atual, y_atual, z_atual = nova_pos
                 
@@ -216,7 +216,7 @@ class CoppeliaBracoAgent:
             self.sim.setObjectPosition(self.target, -1, nova_pos)
             time.sleep(intervalo)
             
-    def rotacionar_para_posicao_xyz(self, ang_final, espera, velocidade = 0.1, intervalo = 0.0000001):
+    def rotacionar_para_posicao_xyz(self, ang_final, espera, velocidade = 0.5, intervalo = 0.001):
         nova_ori = self.sim.getObjectOrientation(self.target, -1)
         orientacao = np.around(np.degrees(np.array(nova_ori)), decimals=0)
         ang_atual, _ = self.calcularRotacao(orientacao[0], orientacao[1], orientacao[2])

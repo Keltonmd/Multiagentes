@@ -9,7 +9,7 @@ areaEntrega = agent.getPos('/entrega_caixa')
 areaRecebimento = agent.getPos('/recebe_caixa')
 
 topicos = ["/entregador/encomendaDisponibilizada", "/entregador/encomendaColetada", "/colaboracao/fim"]
-client = MqttAgent(topicos)
+client = MqttAgent("youBot",topicos)
 
 def entregar():
     agent.moverRobo(np.array([areaEntrega[0], areaEntrega[1]]))
@@ -19,6 +19,7 @@ def receber():
     agent.moverRobo(np.array([areaRecebimento[0], areaRecebimento[1]]))
     agent.orientarRobo()
     
+client.publicar("/entregador/pontoRecebimento", {"status": True})    
 while True:
     if client.iniciar_entrega:
         entregar()

@@ -5,7 +5,7 @@ import time
 agent = CoppeliaBracoAgent("/Franka")
 topicos = [("/bloco/disponivel", 1), "/entregador/pontoRecebimento", "/colaboracao/fim"]
 segurando_bloco = False
-client = MqttAgent(topicos)
+client = MqttAgent("Franka", topicos)
 
 def pegarBloco():
     agent.abrirGarra()
