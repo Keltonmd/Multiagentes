@@ -9,7 +9,8 @@ class MqttAgent:
     # multiagent.ddns.net
     # ip: ip do edison
     # ip 10.73.186.74
-    def __init__(self, id: str, topicos_mqtt: list, broker: str = "localhost", port: int = 1883):
+    # ip: 192.168.1.223
+    def __init__(self, id: str, topicos_mqtt: list, broker: str = "192.168.1.223", port: int = 1883):
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         
