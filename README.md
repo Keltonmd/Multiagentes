@@ -1,6 +1,6 @@
 # 🤖 Projeto Multiagentes com CoppeliaSim e MQTT
 
-**Aluno:** Kelton Martins Dias
+**Alunos:** Kelton Martins Dias, Mariane e Elivan
 
 **Orientador:** Prof. Felipe Mota
 
