@@ -97,7 +97,7 @@ sns.set(style="whitegrid")
 # ============================
 plt.figure(figsize=(12,6))
 ax = sns.barplot(data=metricas, x="Topico", y="Latencia_Mediana_ms",
-                 hue="Ambiente", palette="Set2")
+                 hue="Environment", palette="Set2")
 ax.set_title("Mediana de Latência por Tópico e Ambiente")
 ax.set_ylabel("Latência Mediana (ms)")
 plt.xticks(rotation=45, ha="right")
@@ -110,7 +110,7 @@ plt.close()
 # ============================
 plt.figure(figsize=(12,6))
 ax = sns.barplot(data=metricas, x="Topico", y="Latencia_Media_ms",
-                 hue="Ambiente", palette="Set2")
+                 hue="Environment", palette="Set2")
 ax.set_title("Latência Média por Tópico e Ambiente")
 ax.set_ylabel("Latência Média (ms)")
 plt.xticks(rotation=45, ha="right")
@@ -123,7 +123,7 @@ plt.close()
 # ============================
 plt.figure(figsize=(12,6))
 ax = sns.barplot(data=metricas, x="Topico", y="Jitter_ms",
-                 hue="Ambiente", palette="Set2")
+                 hue="Environment", palette="Set2")
 ax.set_title("Jitter (Desvio-Padrão) por Tópico e Ambiente")
 ax.set_ylabel("Jitter (ms)")
 plt.xticks(rotation=45, ha="right")
@@ -136,7 +136,7 @@ plt.close()
 # ============================
 plt.figure(figsize=(12,6))
 ax = sns.barplot(data=metricas, x="Topico", y="Latencia_P95_ms",
-                 hue="Ambiente", palette="Set2")
+                 hue="Environment", palette="Set2")
 ax.set_title("Latência P95 por Tópico e Ambiente")
 ax.set_ylabel("P95 (ms)")
 plt.xticks(rotation=45, ha="right")
