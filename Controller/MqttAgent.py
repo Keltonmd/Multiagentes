@@ -10,7 +10,7 @@ class MqttAgent:
     # ip: ip do edison
     # ip 10.73.186.74
     # ip: 192.168.1.223
-    def __init__(self, id: str, topicos_mqtt: list, broker: str = "10.185.8.74", port: int = 1883):
+    def __init__(self, id: str, topicos_mqtt: list, broker: str = "localhost", port: int = 1883):
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         

@@ -135,8 +135,121 @@ O `main.py` será responsável por inicializar e orquestrar os scripts de todos 
 
 ---
 
-## 📸 Ilustrações (futuramente)
+## 📸 Ilustrações do Projeto
 
-*Imagens do cenário em execução no CoppeliaSim, com destaque para os robôs e posições dos blocos.*
+A seguir são apresentadas as principais imagens e cenas do ambiente desenvolvido no CoppeliaSim, destacando cada robô, seus papéis na colaboração multiagente e os elementos que compõem o processo de transporte e armazenamento de blocos.
+Essas imagens ajudam a visualizar o funcionamento completo do sistema e a relação entre os agentes conectados via MQTT.
+
+---
+
+### 🤖 **1. Robô Franka Emika**
+
+O **Franka** é o primeiro agente a entrar em ação após o sinal do sensor.
+Ele detecta a chegada de um novo bloco na esteira, posiciona o braço, coleta a caixa com precisão e a entrega ao robô móvel **youBot**.
+
+📷 *Imagem:*
+
+![Franka segurando a caixa](Docs/img/franka.png)
+
+*Na imagem, o robô Franka aparece em vista lateral, segurando o bloco logo após retirá-lo da esteira.*
+
+---
+
+### 🚙 **2. Robô Móvel youBot**
+
+O **youBot** atua como o transportador do sistema.
+Ele recebe o bloco diretamente do Franka, desloca-se até a área de armazenamento e posiciona-se de modo que o **UR10** possa coletar o objeto.
+
+📷 *Imagem:*
+
+![youBot transportando a caixa](Docs/img/youBot.png)
+
+*Na imagem, o robô youBot é visto transportando a caixa em sua plataforma, deslocando-se até o ponto de entrega definido.*
+
+---
+
+### 🦾 **3. Robô Industrial UR10**
+
+O **UR10** é responsável pela etapa final: armazenar o bloco na estante.
+Com seu longo alcance e articulações precisas, ele posiciona a caixa em prateleiras específicas, encerrando o ciclo de transporte.
+
+📷 *Imagem:*
+
+![UR10 segurando a caixa](Docs/img/Ur10.png)
+
+> Mostre o **UR10** estendendo o braço até a estante, segurando a caixa.
+> Arquivo: `docs/img/ur10.png`
+
+*Na imagem, o robô UR10 aparece segurando a caixa, logo após recebê-la do youBot.*
+
+---
+
+### 🔦 **4. Sensor Infravermelho**
+
+O **sensor IR** é o ponto de partida de todo o sistema.
+Quando um bloco passa pela frente do sensor, ele detecta a presença e publica uma mensagem MQTT, notificando o robô **Franka** para iniciar a sequência.
+
+📷 *Imagem:*
+
+![Sensor IR detectando a caixa](Docs/img/Sensor_Infravermelho.png)
+
+*Na imagem, observa-se o sensor infravermelho no momento da detecção da caixa na esteira transportadora.*
+
+---
+
+### 🧱 **5. Elementos do Ambiente**
+
+O ambiente do CoppeliaSim foi projetado para representar uma pequena linha de produção automatizada, com os seguintes componentes:
+
+* **Esteira Transportadora:** conduz os blocos até o sensor infravermelho.
+  📷 ![Esteira transportando caixas](Docs/img/Esteira.png)
+
+* **Caixa (bloco de transporte):** elemento central da tarefa colaborativa entre os robôs.
+📷 
+  <p align="center">
+  <img src="Docs/img/caixaVermelha.png" alt="Caixa Vermelha" width="45%"/>
+  <img src="Docs/img/caixaAzul.png" alt="Caixa Azul" width="45%"/>
+</p>
+
+<p align="center">
+  <em>Caixas manipuladas pelos robôs — vermelha e azul.</em>
+</p>
+
+* **Estante de Armazenamento:** destino final dos blocos manipulados pelo UR10.
+  📷 
+  ![Estante com algumas caixas](Docs/img/Estante.png)
+
+Cada um desses elementos foi configurado com sensores de colisão e scripts de movimentação, garantindo realismo físico e coordenação entre os agentes.
+
+---
+
+### 🌍 **6. Visão Geral do Cenário**
+
+Para compreender a disposição espacial e o fluxo de trabalho dos agentes, são apresentadas duas perspectivas principais do ambiente no **CoppeliaSim**:
+
+* **Vista Superior:** mostra todo o layout, com o caminho percorrido pelos blocos — da esteira até a estante.
+  📷 ![Estante com algumas caixas](Docs/img/cima.png)
+
+* **Vista Frontal:** destaca a interação entre os robôs, permitindo observar o alinhamento das transferências.
+  📷 ![Estante com algumas caixas](Docs/img/frente.png)
+
+Essas imagens oferecem uma visão global da coordenação entre os agentes, essencial para entender o comportamento distribuído do sistema.
+
+---
+
+### 🎥 **7. Demonstração em Vídeo**
+
+Além das imagens estáticas, o projeto conta com uma demonstração completa mostrando o sistema em operação — desde a detecção do bloco até seu armazenamento final.
+
+📽️ *Assista ao vídeo da simulação:*
+
+> [![Cenário Multiagente em Execução](https://img.youtube.com/vi/SEU_VIDEO_ID/0.jpg)](https://youtu.be/SEU_VIDEO_ID)
+> *(Clique na imagem para assistir à execução no YouTube.)*
+
+📂 *Ou veja a versão local (GIF curto):*
+
+```markdown
+![Simulação do Cenário Multiagente](docs/video/cenario.gif)
+```
 
 ---
