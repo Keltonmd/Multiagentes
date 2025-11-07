@@ -281,7 +281,7 @@ Além das imagens estáticas, o projeto conta com uma demonstração completa mo
 📂 *Ou veja a versão local (GIF curto):*
 
 ```markdown
-![Simulação do Cenário Multiagente](Docs/video/MultiAgent.gif)
+[Simulação do Cenário Multiagente](Docs/video/MultiAgent.gif)
 ```
 
 ---
