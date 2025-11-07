@@ -49,18 +49,49 @@ Automatizar o transporte e armazenamento de blocos por meio de agentes robótico
 
 ```
 Multiagentes/
-├── Controller/
-│   ├── main.py
-│   ├── franka.py
-│   ├── youBot.py
-│   ├── ur10.py
-│   ├── sensorEsteira.py
-│   ├── CoppeliaBracoAgent.py
-│   ├── CoppeliaMobileAgent.py
-│   └── MqttAgent.py
-├── Coppelia/
-│   └── Multiagentes.ttt
-└── README.md
+├── Controller/                     # Scripts de controle e agentes Python
+│   ├── main.py                     # Script principal que orquestra todos os agentes
+│   ├── franka.py                   # Controle do robô Franka Emika
+│   ├── youBot.py                   # Controle do robô móvel youBot
+│   ├── ur10.py                     # Controle do robô UR10
+│   ├── sensorEsteira.py            # Controle do sensor infravermelho da esteira
+│   ├── CoppeliaBracoAgent.py       # Classe base para agentes com braço robótico
+│   ├── CoppeliaMobileAgent.py      # Classe base para agentes móveis
+│   └── MqttAgent.py                # Classe responsável pela comunicação via MQTT
+│
+├── Coppelia/                       # Cenário do simulador
+│   └── Multiagentes.ttt            # Arquivo de simulação do CoppeliaSim
+│
+├── Docs/                           # Documentação e recursos visuais do projeto
+│   ├── img/                        # Imagens ilustrativas (robôs, cenário, componentes)
+│   │   ├── franka.png
+│   │   ├── youbot.png
+│   │   ├── ur10.png
+│   │   ├── Sensor_infravermelho.png
+│   │   ├── esteira.png
+│   │   ├── caixaAzul.png
+│   │   ├── caixaVermelha.png
+│   │   ├── Estante.png
+│   │   ├── Esteira.png
+│   │   ├── frente.png
+│   │   ├── cima.png
+│   │   ├── ultima_coleta.png
+│   │   └── guardando_ulti_bloc.png
+│   └── video/                      # Vídeos ou GIFs da simulação em execução
+│       └── MultiAgent.gif
+│
+├── Resultados/                     # Dados e resultados das execuções e experimentos
+│   ├── Edison/                     # Resultados e logs obtidos em testes na Intel Edison
+│   ├── Graficos/                   # Gráficos de desempenho e análise dos agentes
+│   ├── Local/                      # Resultados de execução local (PC host)
+│   ├── Nuvem/                      # Resultados obtidos em execução na nuvem (ex: AWS EC2)
+│   ├── Recurso_Computacionais/     # Tabelas e medições de uso de CPU, memória e rede
+│   ├── processamento.py
+│   ├── topicos.png
+│   └── metricas_completas_latencia_jitter.csv
+│
+└── README.md                       # Documentação principal do projeto
+
 ```
 
 ---
@@ -250,7 +281,7 @@ Além das imagens estáticas, o projeto conta com uma demonstração completa mo
 📂 *Ou veja a versão local (GIF curto):*
 
 ```markdown
-![Simulação do Cenário Multiagente](docs/video/cenario.gif)
+![Simulação do Cenário Multiagente](Docs/video/MultiAgent%20.gif)
 ```
 
 ---
