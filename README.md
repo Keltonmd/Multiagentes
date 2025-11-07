@@ -279,9 +279,6 @@ Além das imagens estáticas, o projeto conta com uma demonstração completa mo
 > *(Clique na imagem para assistir à execução no YouTube.)*
 
 📂 *Ou veja a versão local (GIF curto):*
-
-```markdown
-[Simulação do Cenário Multiagente](Docs/video/MultiAgent.gif)
-```
+![Simulação do Cenário Multiagente](Docs/video/MultiAgent.gif)
 
 ---
