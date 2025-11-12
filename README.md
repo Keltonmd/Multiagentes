@@ -106,9 +106,13 @@ cd Multiagentes/Controller
 ```
 
 ### 2. Crie o Ambiente Virtual
+```bash
+Caso não tenha o Venv instalado, execute:
+sudo apt install python3-venv
+```
 
 ```bash
-python -m venv venv
+python3 -m venv .venv
 source venv/bin/activate     # Linux/macOS
 venv\Scripts\activate.bat    # Windows
 ```
